@@ -10,18 +10,33 @@ import (
 	"strings"
 )
 
+// optional fun to provide a unique body of a hit
+//
+type BodyPipe func(i int) io.Reader
+
 // Target is a HTTP request blueprint
 type Target struct {
 	Method string
 	URL    string
 	Body   []byte
+	Pipe   BodyPipe
 	Header http.Header
+}
+
+// body is Pipe or Body ( XXX names and design )
+//
+func (self *Target) body(i int) io.Reader {
+	if self.Pipe == nil {
+		return bytes.NewBuffer(self.Body)
+	}
+	return self.Pipe(i)
 }
 
 // Request creates an *http.Request out of Target and returns it along with an
 // error in case of failure.
-func (t *Target) Request() (*http.Request, error) {
-	req, err := http.NewRequest(t.Method, t.URL, bytes.NewBuffer(t.Body))
+// i is unique hit number
+func (t *Target) Request(i int) (*http.Request, error) {
+	req, err := http.NewRequest(t.Method, t.URL, t.body(i))
 	if err != nil {
 		return nil, err
 	}
