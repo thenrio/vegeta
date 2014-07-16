@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -29,7 +30,7 @@ func TestTargetRequest(t *testing.T) {
 			"Host":                []string{"lolcathost"},
 		},
 	}
-	req, _ := tgt.Request()
+	req, _ := tgt.Request(0)
 
 	reqBody, err := ioutil.ReadAll(req.Body)
 	if err != nil {
@@ -105,4 +106,20 @@ func TestShuffle(t *testing.T) {
 		}
 	}
 	t.Fatal("Targets were not shuffled correctly")
+}
+
+func TestBody(t *testing.T) {
+	t.Parallel()
+
+	target := Target{
+		Method: "POST",
+		URL:    "http://localhost:4242",
+		Fun:    func(i int) io.Reader { return strings.NewReader("awe") },
+	}
+
+	b, err := ioutil.ReadAll(target.body(0))
+
+	if "awe" != string(b) || err != nil {
+		t.Fatal("bad")
+	}
 }

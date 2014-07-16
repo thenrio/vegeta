@@ -81,7 +81,7 @@ func (a *Attacker) Attack(tgts Targets, rate uint64, du time.Duration) Results {
 
 	for i := 0; i < hits; i++ {
 		<-throttle.C
-		go func(tgt Target) { resc <- a.hit(tgt) }(tgts[i%len(tgts)])
+		go func(tgt Target) { resc <- a.hit(tgt, i) }(tgts[i%len(tgts)])
 	}
 
 	results := make(Results, 0, hits)
@@ -92,8 +92,8 @@ func (a *Attacker) Attack(tgts Targets, rate uint64, du time.Duration) Results {
 	return results.Sort()
 }
 
-func (a *Attacker) hit(tgt Target) (res Result) {
-	req, err := tgt.Request()
+func (a *Attacker) hit(tgt Target, i int) (res Result) {
+	req, err := tgt.Request(i)
 	if err != nil {
 		res.Error = err.Error()
 		return res
